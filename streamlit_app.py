@@ -2,30 +2,32 @@ import streamlit as st
 import pandas as pd
 from snowflake.snowpark import Session
 
-# 1. Page Config
-st.set_page_config(page_title="AI Portfolio | Review Decoder", page_icon="🕵️‍♂️")
+st.set_page_config(page_title="AI Review Decoder", page_icon="🕵️‍♂️", layout="wide")
 
-st.title("🕵️‍♂️ SADDY: The Interactive Review Decoder")
-st.write("---")
-
-# 2. Connection Logic 
+# This handles the connection to your 400k rows
 def create_session():
-    # This specifically uses the credentials you just saved in 'Secrets'
     return Session.builder.configs(st.secrets["snowflake"]).create()
 
-# Check if session exists, if not, create it
 if 'snowpark_session' not in st.session_state:
     st.session_state.snowpark_session = create_session()
 
 session = st.session_state.snowpark_session
 
-# 3. Interactive Sidebar
-st.sidebar.header("Control Panel")
-sample_size = st.sidebar.slider("Reviews to analyze:", 10, 100, 50)
-search_query = st.sidebar.text_input("Search keyword:", "good")
+st.title("🕵️‍♂️ SADDY: Amazon Review Vibe Decoder")
+st.markdown("---")
 
-# 4. Data Query
-query = f"""
+# COOL INTERACTIVE SIDEBAR
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2092/2092215.png", width=100)
+st.sidebar.header("Discovery Lab")
+search_term = st.sidebar.text_input("Find a product keyword:", "pizza")
+limit_val = st.sidebar.slider("Number of reviews to scan:", 10, 100, 25)
+
+# SUCCESS ANIMATION TRIGGER
+if st.sidebar.button("Celebrate Data Success"):
+    st.balloons()
+
+# THE MAGIC QUERY
+df = session.sql(f"""
     SELECT $1 as REVIEW_TEXT,
     CASE 
         WHEN $1 ILIKE '%great%' OR $1 ILIKE '%amazing%' THEN 1
@@ -33,16 +35,21 @@ query = f"""
         ELSE 0 
     END as VIBE_SCORE
     FROM CUSTOMER_REVIEWS_AMAZON.PUBLIC.AMAZON_TEST_DATA
-    WHERE $1 ILIKE '%{search_query}%'
-    LIMIT {sample_size}
-"""
+    WHERE $1 ILIKE '%{search_term}%'
+    LIMIT {limit_val}
+""").to_pandas()
 
-df = session.sql(query).to_pandas()
+# LAYOUT
+col1, col2 = st.columns([2, 1])
 
-# 5. Visuals
-st.subheader("Vibe Analysis")
-st.bar_chart(df, y="VIBE_SCORE", color="#FF4B4B")
-st.dataframe(df)
+with col1:
+    st.subheader("Vibe Analysis Chart")
+    st.bar_chart(df, y="VIBE_SCORE", color="#00d4ff")
 
-if st.button("Celebrate!"):
-    st.balloons()
+with col2:
+    st.subheader("Data Stats")
+    st.metric("Total Rows in Warehouse", "399,989")
+    st.info("Analysis powered by Snowflake Snowpark")
+
+st.write("### Live Data Feed")
+st.dataframe(df, use_container_width=True)
