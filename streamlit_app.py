@@ -1,26 +1,18 @@
 import streamlit as st
-from snowflake.snowpark.context import get_active_session
 import pandas as pd
+from snowflake.snowpark import Session
 
-# 1. Page Config (Adds a professional browser tab title)
+# 1. Page Config
 st.set_page_config(page_title="AI Portfolio | Review Decoder", page_icon="🕵️‍♂️")
 
 st.title("🕵️‍♂️ SADDY: The Interactive Review Decoder")
 st.write("---")
 
-# 2. Interactive Sidebar
-st.sidebar.header("Control Panel")
-sample_size = st.sidebar.slider("How many reviews to analyze?", 10, 100, 50)
-search_query = st.sidebar.text_input("Filter by keyword (e.g., 'quality', 'bad')")
-
-from snowflake.snowpark import Session
-
-# This function helps the app log in from the public web
+# 2. Connection Logic (The "Hybrid" Fix)
 def create_session():
     return Session.builder.configs(st.secrets["snowflake"]).create()
 
 if 'snowpark_session' not in st.session_state:
-    # If running locally/web, it uses 'secrets'. If in Snowflake, it uses 'active_session'
     try:
         from snowflake.snowpark.context import get_active_session
         st.session_state.snowpark_session = get_active_session()
@@ -61,3 +53,4 @@ if st.button("Run Deep Analysis"):
     with st.spinner('Calculating vibes...'):
         st.balloons()
         st.dataframe(df)
+
