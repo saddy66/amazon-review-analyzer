@@ -52,4 +52,5 @@ with col2:
     st.info("Analysis powered by Snowflake Snowpark")
 
 st.write("### Live Data Feed")
-st.dataframe(df, use_container_width=True)
+st.dataframe(df, width='stretch')
+
