@@ -13,7 +13,21 @@ st.sidebar.header("Control Panel")
 sample_size = st.sidebar.slider("How many reviews to analyze?", 10, 100, 50)
 search_query = st.sidebar.text_input("Filter by keyword (e.g., 'quality', 'bad')")
 
-session = get_active_session()
+from snowflake.snowpark import Session
+
+# This function helps the app log in from the public web
+def create_session():
+    return Session.builder.configs(st.secrets["snowflake"]).create()
+
+if 'snowpark_session' not in st.session_state:
+    # If running locally/web, it uses 'secrets'. If in Snowflake, it uses 'active_session'
+    try:
+        from snowflake.snowpark.context import get_active_session
+        st.session_state.snowpark_session = get_active_session()
+    except:
+        st.session_state.snowpark_session = create_session()
+
+session = st.session_state.snowpark_session
 
 # 3. Dynamic SQL based on user input
 query = f"""
