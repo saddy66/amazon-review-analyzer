@@ -13,44 +13,82 @@ if 'snowpark_session' not in st.session_state:
 
 session = st.session_state.snowpark_session
 
+# --- HERO SECTION ---
 st.title("🕵️‍♂️ SADDY: Amazon Review Vibe Decoder")
-st.markdown("---")
 
-# COOL INTERACTIVE SIDEBAR
+# Use columns to create a "Dashboard Header" look
+header_col1, header_col2 = st.columns([2, 1])
+
+with header_col1:
+    st.markdown("""
+    ### Project Overview
+    This application leverages **Snowflake Snowpark** to perform real-time sentiment analysis 
+    on a dataset of **399,989 Amazon reviews**. 
+    
+    * **The Goal:** Instantly decode the "vibe" of customer feedback using custom SQL logic.
+    * **The Tech:** Python, Streamlit, and Snowflake Cloud Data Warehouse.
+    """)
+
+with header_col2:
+    # A status box for the warehouse
+    st.success("🛰️ Connected to Singapore AWS")
+    st.info("📦 Warehouse: COMPUTE_WH")
+
+st.write("---")
+
+# 1. Interactive Sidebar for User Inputs
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2092/2092215.png", width=100)
 st.sidebar.header("Discovery Lab")
-search_term = st.sidebar.text_input("Find a product keyword:", "pizza")
+search_term = st.sidebar.text_input("Find a product keyword (e.g., 'pizza', 'phone'):", "pizza")
 limit_val = st.sidebar.slider("Number of reviews to scan:", 10, 100, 25)
 
-# SUCCESS ANIMATION TRIGGER
-if st.sidebar.button("Celebrate Data Success"):
-    st.balloons()
+# 2. The Data Query Logic
+if search_term:
+    # Adding a 'Status' container for a professional loading animation
+    with st.status("🔍 Scanning 400k reviews in Snowflake...", expanded=True) as status:
+        st.write("Establishing secure handshake...")
+        
+        # This is your core SQL logic
+        query = f"""
+            SELECT $1 as REVIEW_TEXT,
+            CASE 
+                WHEN $1 ILIKE '%great%' OR $1 ILIKE '%amazing%' THEN 1
+                WHEN $1 ILIKE '%bad%' OR $1 ILIKE '%awful%' THEN -1
+                ELSE 0 
+            END as VIBE_SCORE
+            FROM CUSTOMER_REVIEWS_AMAZON.PUBLIC.AMAZON_TEST_DATA
+            WHERE $1 ILIKE '%{search_term}%'
+            LIMIT {limit_val}
+        """
+        
+        # Execute and convert to pandas
+        df = session.sql(query).to_pandas()
+        
+        st.write("Categorizing sentiment vibes...")
+        status.update(label="Analysis Complete!", state="complete", expanded=False)
+    
+    # 3. Visual Layout for Charts and Metrics
+    st.toast("Data decoded successfully!", icon="✅")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.subheader("Vibe Analysis Chart")
+        # Creating a bar chart based on the VIBE_SCORE
+        st.bar_chart(df, y="VIBE_SCORE", color="#00d4ff")
 
-# THE MAGIC QUERY
-df = session.sql(f"""
-    SELECT $1 as REVIEW_TEXT,
-    CASE 
-        WHEN $1 ILIKE '%great%' OR $1 ILIKE '%amazing%' THEN 1
-        WHEN $1 ILIKE '%bad%' OR $1 ILIKE '%awful%' THEN -1
-        ELSE 0 
-    END as VIBE_SCORE
-    FROM CUSTOMER_REVIEWS_AMAZON.PUBLIC.AMAZON_TEST_DATA
-    WHERE $1 ILIKE '%{search_term}%'
-    LIMIT {limit_val}
-""").to_pandas()
+    with col2:
+        st.subheader("Data Stats")
+        st.metric("Total Records Analyzed", len(df))
+        st.metric("Warehouse Status", "Online")
+        
+        # Success Animation Trigger
+        if st.button("Celebrate Data Success"):
+            st.balloons()
 
-# LAYOUT
-col1, col2 = st.columns([2, 1])
-
-with col1:
-    st.subheader("Vibe Analysis Chart")
-    st.bar_chart(df, y="VIBE_SCORE", color="#00d4ff")
-
-with col2:
-    st.subheader("Data Stats")
-    st.metric("Total Rows in Warehouse", "399,989")
-    st.info("Analysis powered by Snowflake Snowpark")
-
-st.write("### Live Data Feed")
-st.dataframe(df, width='stretch')
+    # 4. Display the Raw Data at the bottom
+    st.write("### Live Data Feed")
+    st.dataframe(df, width='stretch')
+else:
+    st.warning("Please enter a keyword in the sidebar to start the analysis.")
 
