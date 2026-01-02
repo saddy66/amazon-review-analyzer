@@ -8,20 +8,23 @@ st.set_page_config(page_title="AI Portfolio | Review Decoder", page_icon="🕵�
 st.title("🕵️‍♂️ SADDY: The Interactive Review Decoder")
 st.write("---")
 
-# 2. Connection Logic (The "Hybrid" Fix)
+# 2. Connection Logic 
 def create_session():
+    # This specifically uses the credentials you just saved in 'Secrets'
     return Session.builder.configs(st.secrets["snowflake"]).create()
 
+# Check if session exists, if not, create it
 if 'snowpark_session' not in st.session_state:
-    try:
-        from snowflake.snowpark.context import get_active_session
-        st.session_state.snowpark_session = get_active_session()
-    except:
-        st.session_state.snowpark_session = create_session()
+    st.session_state.snowpark_session = create_session()
 
 session = st.session_state.snowpark_session
 
-# 3. Dynamic SQL based on user input
+# 3. Interactive Sidebar
+st.sidebar.header("Control Panel")
+sample_size = st.sidebar.slider("Reviews to analyze:", 10, 100, 50)
+search_query = st.sidebar.text_input("Search keyword:", "good")
+
+# 4. Data Query
 query = f"""
     SELECT $1 as REVIEW_TEXT,
     CASE 
@@ -36,21 +39,10 @@ query = f"""
 
 df = session.sql(query).to_pandas()
 
-# 4. Visual Layout 
-col1, col2 = st.columns([1, 1])
+# 5. Visuals
+st.subheader("Vibe Analysis")
+st.bar_chart(df, y="VIBE_SCORE", color="#FF4B4B")
+st.dataframe(df)
 
-with col1:
-    st.subheader("Vibe Distribution")
-    st.bar_chart(df, y="VIBE_SCORE", color="#FF4B4B")
-
-with col2:
-    st.subheader("Project Specs")
-    st.info(f"**Dataset:** 400,000 Amazon Reviews")
-    st.success(f"**Tech:** Snowflake + Streamlit")
-
-# 5. Animated Progress Bar
-if st.button("Run Deep Analysis"):
-    with st.spinner('Calculating vibes...'):
-        st.balloons()
-        st.dataframe(df)
-
+if st.button("Celebrate!"):
+    st.balloons()
