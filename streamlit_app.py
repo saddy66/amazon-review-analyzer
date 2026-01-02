@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from snowflake.snowpark import Session
 
-# 1. PAGE SETUP (The Foundation)
+# page startings lol
 st.set_page_config(page_title="SADDY | Neural Portfolio", page_icon="🌐", layout="wide")
 
 # 2. CSS
@@ -32,11 +32,11 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. NAVIGATION & HEADER
+# 3. navigation and instruction
 st.title("SADDY NEURAL INTERFACE v1.0")
 st.write("Welcome to the central node. Select a project to initialize.")
 
-# Navigation Buttons
+# buttons
 nav_col1, nav_col2, nav_col3 = st.columns(3)
 with nav_col1:
     if st.button("📡 [ 01: AMAZON SENTIMENT ANALYSIS ]", use_container_width=True):
@@ -48,7 +48,7 @@ with nav_col3:
 
 st.write("---")
 
-# 4. DATABASE CONNECTION (Keep this at the top level)
+# 4. db connection
 def create_session():
     return Session.builder.configs(st.secrets["snowflake"]).create()
 
@@ -62,12 +62,12 @@ session = st.session_state.snowpark_session
 st.markdown('<div class="project-container">', unsafe_allow_html=True)
 st.header("📡 PROJECT 01: AMAZON SENTIMENT ANALYSIS")
 
-# Sidebar Logic for this specific project
+# Logic for this specific project
 st.sidebar.header("📡 Project 01 Controls")
 search_term = st.sidebar.text_input("Vibe Keyword:", "pizza", key="p1_search")
 limit_val = st.sidebar.slider("Scan Depth:", 10, 100, 25, key="p1_slider")
 
-# Run the Amazon Query
+# Amazon Query
 if search_term:
     query = f"""
         SELECT $1 as REVIEW_TEXT,
@@ -96,7 +96,7 @@ if search_term:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================================
-# PROJECT 02: PLACEHOLDER (My Next Big Idea)
+# PROJECT 02: PLACEHOLDER idk yet
 # ==========================================================
 st.markdown('<div class="project-container">', unsafe_allow_html=True)
 st.header("🧬 PROJECT 02: EPST1EN FlLES")
@@ -107,3 +107,4 @@ st.markdown('</div>', unsafe_allow_html=True)
 # FOOTER
 st.write("---")
 st.caption("Saad Neural Portfolio (LinkedIn: https://www.linkedin.com/in/mohammed-saaduddin-siddique-13776b271/) | AWS Singapore Node | 2026")
+
