@@ -86,9 +86,50 @@ if search_term:
         if st.button("Celebrate Data Success"):
             st.balloons()
 
-    # 4. Display the Raw Data at the bottom
-    st.write("### Live Data Feed")
-    st.dataframe(df, width='stretch')
-else:
-    st.warning("Please enter a keyword in the sidebar to start the analysis.")
+   # 4. Visual Layout (Charts and Metrics)
+    st.toast("Data decoded successfully!", icon="✅")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.subheader("📊 Vibe Analysis Chart")
+        # Visualizing the sentiment scores
+        st.bar_chart(df, y="VIBE_SCORE", color="#00d4ff")
 
+    with col2:
+        st.subheader("📈 Data Stats")
+        st.metric("Reviews Analyzed", len(df))
+        st.metric("Warehouse Status", "Online")
+        
+        # Interactive Celebration Button
+        if st.button("Celebrate Data Success"):
+            st.balloons()
+
+    # 5. Live Data Feed & Export Feature
+    st.write("---")
+    data_col, download_col = st.columns([3, 1])
+    
+    with data_col:
+        st.write("### 📄 Live Data Feed")
+    
+    with download_col:
+        # Convert the dataframe to CSV for exporting
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Report",
+            data=csv,
+            file_name=f'amazon_vibe_report_{search_term}.csv',
+            mime='text/csv',
+            use_container_width=True
+        )
+
+    # Displaying the raw data with the new width parameter
+    st.dataframe(df, width='stretch')
+
+    # --- PORTFOLIO FOOTER ---
+    st.write("---")
+    st.caption("Built by SADDY | Tech Stack: Python, Streamlit, Snowflake Snowpark & AWS Singapore")
+
+else:
+    # This shows if the user hasn't typed anything yet
+    st.warning("👈 Enter a keyword in the 'Discovery Lab' sidebar to start the Snowflake analysis.")
